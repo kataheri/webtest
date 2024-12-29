@@ -29,7 +29,7 @@ jobs:
         uses: browser-actions/setup-chrome@v1.4.0
         with:
           chrome-version: latest # Ganti dengan 'stable' untuk versi stabil
-          #chrome-options: '--headless' #(Jika ingin menjalankan Chrome dalam mode headless)
+          chrome-options: '--headless' #(Jika ingin menjalankan Chrome dalam mode headless)
 
       - name: Build with Gradle
         run: |
