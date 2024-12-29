@@ -21,13 +21,14 @@ jobs:
         java-version: '22'
         distribution: 'temurin'
 
-    - name: Install Chrome and ChromeDriver
+    - name: Install Specific Version of Chrome
       run: |
         sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
-        DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*}" || echo "117.0.5938.62")
-        wget "https://chromedriver.storage.googleapis.com/${DRIVER_VERSION}/chromedriver_linux64.zip"
+        sudo apt-get install -y google-chrome-stable=117.0.5938.62-1
+
+    - name: Install ChromeDriver
+      run: |
+        wget https://chromedriver.storage.googleapis.com/117.0.5938.62/chromedriver_linux64.zip
         unzip chromedriver_linux64.zip
         sudo mv chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
