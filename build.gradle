@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Selenium
+    implementation 'org.seleniumhq.selenium:selenium-java:4.12.1'
+
+    // Cucumber
+    implementation 'io.cucumber:cucumber-java:7.11.2'
+    implementation 'io.cucumber:cucumber-junit:7.11.2'
+    implementation 'io.cucumber:cucumber-core:7.11.2'
+
+    // WebDriver Manager
+    implementation 'io.github.bonigarcia:webdrivermanager:5.5.3'
+
+    // JUnit
+    testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.test {
+    useJUnit()
+}
