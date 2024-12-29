@@ -13,6 +13,7 @@ public class Hooks {
     public void setUp() {
         // Setup ChromeDriver menggunakan WebDriverManager
         WebDriverManager.chromedriver().setup();
+        System.setProperty("webdriver.chrome.driver", System.getenv("CHROMEDRIVER"));
         driver = new ChromeDriver();
     }
 
