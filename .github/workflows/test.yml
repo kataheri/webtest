@@ -7,11 +7,6 @@ on:
   pull_request:
     branches: [ "master" ]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -28,28 +23,31 @@ jobs:
         java-version: '22'
         distribution: 'temurin'
 
+    # Install Chrome and ChromeDriver
+    - name: Install Chrome and ChromeDriver
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        wget https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
+
     # Set up Gradle 8.10
     - name: Set up Gradle
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: 8.10
 
-    # Cache dependencies
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-
-    - name: Build with Gradle
+    # Make gradlew executable and run build & test
+    - name: Build and Test
       run: |
-        chmod +x gradlew  # Make gradlew executable
-        ./gradlew build   # Run the build task before tests
-
-    - name: Run Tests
-      run: ./gradlew clean test  # Run tests after the build step
+        chmod +x gradlew
+        ./gradlew build test
+      env:
+        JAVA_HOME: ${{ steps.setup-java.outputs.java-home }}
+        CHROME_BIN: /usr/bin/google-chrome
+        CHROMEDRIVER: /usr/local/bin/chromedriver
 
     - name: Archive test results
       uses: actions/upload-artifact@v4.3.0
