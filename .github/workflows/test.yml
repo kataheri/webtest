@@ -13,35 +13,47 @@ permissions:
   id-token: write
 
 jobs:
-  automation-JUnit:
-    runs-on: ubuntu-latest  # windows-latest, macos-latest, ubuntu-18.04,
+  build-and-test:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3  # Checkout the repository
+    # Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up JDK 22
-        uses: actions/setup-java@v4.0.0
-        with:
-          java-version: '22'  # Ganti dengan versi Java lain seperti '8', '17'
-          distribution: 'temurin'  # Alternatif: 'adoptopenjdk', 'zulu'
+    # Set up JDK 22
+    - name: Set up JDK 22
+      uses: actions/setup-java@v3
+      with:
+        java-version: '22'
+        distribution: 'temurin'
 
-      - name: Setup Chrome with extra capabilities
-        uses: browser-actions/setup-chrome@v1.4.0
-        with:
-          chrome-version: stable # Ganti dengan 'stable' untuk versi stabil
-          chrome-options: '--headless' #(Jika ingin menjalankan Chrome dalam mode headless)
+    # Set up Gradle 8.10
+    - name: Set up Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: 8.10
 
-      - name: Build with Gradle
-        run: |
-          chmod +x gradlew  # Make gradlew executable
-          ./gradlew build   # Run the build task before tests
+    # Cache dependencies
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
 
-      - name: Run Tests
-        run: ./gradlew clean test  # Run tests after the build step
+    - name: Build with Gradle
+      run: |
+        chmod +x gradlew  # Make gradlew executable
+        ./gradlew build   # Run the build task before tests
 
-      - name: Archive test results
-        uses: actions/upload-artifact@v4.3.0
-        if: always() #always() # success() , failure(), canceled()
-        with:
-          name: cucumber reports
-          path: target/cucumber-reports.html  # Path to test reports
+    - name: Run Tests
+      run: ./gradlew clean test  # Run tests after the build step
+
+    - name: Archive test results
+      uses: actions/upload-artifact@v4.3.0
+      if: always() #always() # success() , failure(), canceled()
+      with:
+        name: cucumber reports
+        path: target/cucumber-reports.html  # Path to test reports
