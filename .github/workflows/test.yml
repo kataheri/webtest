@@ -7,41 +7,51 @@ on:
   pull_request:
     branches: [ "master" ]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
-  automation-JUnit:
-    runs-on: ubuntu-latest  # windows-latest, macos-latest, ubuntu-18.04,
+  build-and-test:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3  # Checkout the repository
+    # Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up JDK 22
-        uses: actions/setup-java@v4.0.0
-        with:
-          java-version: '22'  # Ganti dengan versi Java lain seperti '8', '17'
-          distribution: 'temurin'  # Alternatif: 'adoptopenjdk', 'zulu'
+    # Set up JDK 22
+    - name: Set up JDK 22
+      uses: actions/setup-java@v3
+      with:
+        java-version: '22'
+        distribution: 'temurin'
 
-      - name: Setup Chrome with extra capabilities
-        uses: browser-actions/setup-chrome@v1.4.0
-        with:
-          chrome-version: latest # Ganti dengan 'stable' untuk versi stabil
-          #chrome-options: '--headless' #(Jika ingin menjalankan Chrome dalam mode headless)
+    # Install Chrome and ChromeDriver
+    - name: Install Chrome and ChromeDriver
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        wget https://chromedriver.storage.googleapis.com/$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
 
-      - name: Build with Gradle
-        run: |
-          chmod +x gradlew  # Make gradlew executable
-          ./gradlew build   # Run the build task before tests
+    # Set up Gradle 8.10
+    - name: Set up Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: 8.10
 
-      - name: Run Tests
-        run: ./gradlew clean test  # Run tests after the build step
+    # Make gradlew executable and run build & test
+    - name: Build and Test
+      run: |
+        chmod +x gradlew
+        ./gradlew build test
+      env:
+        JAVA_HOME: ${{ steps.setup-java.outputs.java-home }}
+        CHROME_BIN: /usr/bin/google-chrome
+        CHROMEDRIVER: /usr/local/bin/chromedriver
 
-      - name: Archive test results
-        uses: actions/upload-artifact@v4.3.0
-        if: always() #always() # success() , failure(), canceled()
-        with:
-          name: cucumber reports
-          path: target/cucumber-reports.html  # Path to test reports
+    - name: Archive test results
+      uses: actions/upload-artifact@v4.3.0
+      if: always() #always() # success() , failure(), canceled()
+      with:
+        name: cucumber reports
+        path: target/cucumber-reports.html  # Path to test reports
